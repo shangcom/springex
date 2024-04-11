@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- xmlns : namespace 정의-->
+<!--차례로
+        xmlns = 기본 네임 스페이스 : Spring bean 구성 파일에 사용되는 요소들을 정의
+        xmlns:xsi = XML 스키마 인스턴스 네임스페이스를 정의. XML 문서가 특정 스키마에 따라 검증될 수 있게 해주는 역할.
+        xmlns:context = Spring의 context 네임스페이스를 정의합니다. 애플리케이션 컨텍스트 관련 설정, 예를 들어 컴포넌트 스캔 같은 기능을 사용할 때 필요.
+        xmlns:mybatis = MyBatis-Spring 통합 모듈의 네임스페이스를 정의합니다. 이 네임스페이스는 MyBatis와 Spring Framework를 함께 사용할 때 필요한 설정을 포함
+        xsi:schemaLocation = 사용되는 네임스페이스와 그에 해당하는 XML 스키마 문서(XSD)의 위치를 쌍으로 정의. 이 정보는 XML 문서가 올바르게 형식화되고,
+        정의된 스키마에 맞는지 검증하는 데 사용.-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd">
+
+
+    <bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+        <property name="driverClassName" value="org.mariadb.jdbc.Driver"></property>
+        <property name="jdbcUrl" value="jdbc:mariadb://localhost:3307/webdb"></property>
+        <property name="username" value="webuser"></property>
+        <property name="password" value="webuser"></property>
+        <property name="dataSourceProperties">
+            <props>
+                <prop key="cachePrepStmts">true</prop>
+                <prop key="prepStmtCacheSize">250</prop>
+                <prop key="prepStmtCacheSqlLimit">2048</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource"
+          destroy-method="close"> <!--리소스 자동 닫기-->
+        <constructor-arg ref="hikariConfig" /> <!--생성자 주입 방식-->
+    </bean>
+
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="mapperLocations" value="classpath:/mappers/**/*.xml"></property>
+    </bean>
+
+    <mybatis:scan base-package="com.green.springex.mapper"></mybatis:scan>
+
+<!--
+    <context:component-scan base-package="com.green.springex.config"/>
+    <context:component-scan base-package="com.green.springex.service"/>
+-->
+
+    <!--직접 넣어주는 방식-->
+    <!--    <bean class="com.green.springex.sample.SampleDAO"></bean>-->
+    <!--    <bean class="com.green.springex.sample.SampleService"></bean>-->
+
+    <!--여기서 context 쓰려면 위에 xmlns에 "context=~" 추가해야함.-->
+    <context:component-scan base-package="com.green.springex.sample"/>
+    <!--Spring이 com.green.springex.sample 패키지와 그 하위 패키지를 스캔하도록 지시하여,
+    @Component, @Service, @Repository, @Controller 등의 어노테이션이 적용된 클래스를 찾아 자동으로
+    Spring Application Context에 빈(bean)으로 등록하도록 합니다. 이 설정을 사용함으로써 개발자는
+    Spring이 관리할 컴포넌트를 수동으로 XML 파일에 등록하는 번거로움을 Z피할 수 있으며,
+    대신 어노테이션을 기반으로 자동 빈 등록을 활용할 수 있음.-->
+</beans>
